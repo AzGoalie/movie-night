@@ -1,36 +1,16 @@
-@import "reset.css";
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
-    helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial,
-    sans-serif;
-}
-
-#status-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  margin: 2rem;
-
-  &.hidden {
-    display: none;
-  }
-}
-
-#video-player {
-  background-color: black;
-  object-fit: cover;
-  width: 640px;
+.text-center {
+  text-align: center;
 }
 
 .center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  place-content: center;
 }
 
-.flex-column {
-  flex-direction: column;
+.video-player {
+  background-color: black;
+  object-fit: cover;
+  width: 100%;
+  min-width: 640px;
+  height: 100%;
 }

@@ -3,19 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/pico.min.css" />
     <link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
     <title>Movie Night</title>
   </head>
 
   <body>
-    <section id="status-section">
-      <h1>The broadcast has not started yet</h1>
-    </section>
+    <main class="container">
+      <section id="status-section" class="center">
+        <h1>The broadcast has not started yet</h1>
+      </section>
 
-    <div class="center">
-      <video id="video-player" playsinline autoplay controls></video>
-    </div>
+      <div class="center">
+        <video
+          id="video-player"
+          class="video-player"
+          playsinline
+          autoplay
+          controls
+        ></video>
+      </div>
+    </main>
 
     <script src="/js/shared.js"></script>
     <script src="/js/streaming.js"></script>

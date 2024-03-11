@@ -1,6 +1,6 @@
-(ns app.firebase.room
+(ns app.firebase.rooms
   (:require [app.firebase.core :refer [firestore]]
-            ["firebase/firestore" :refer [addDoc collection doc getDoc getDocs]]))
+            ["firebase/firestore" :refer [addDoc collection deleteDoc doc getDoc getDocs onSnapshot setDoc]]))
 
 (defn get-rooms
   "Returns a js/Promise of a firebase collection of rooms."
@@ -15,8 +15,8 @@
 (defn create-room
   "Creates a new room with a random ID and owned by the specified user ID.
    Returns a js/Promise of the newly created room."
-  [owner]
-  (addDoc (collection firestore "rooms") #js {:owner owner}))
+  [owner-id]
+  (addDoc (collection firestore "rooms") #js {:owner owner-id}))
 
 (defn get-room-data
   "If the room exists, returns it's data as a map"

@@ -1,63 +1,64 @@
 (ns app.streaming.core
   (:require [app.firebase.core :refer [user]]
-            [app.firebase.utils :refer [add-viewer get-viewers on-snapshot remove-viewer]]
+            [app.firebase.rooms :as rooms]
+            [app.firebase.viewers :as viewers]
             [app.streaming.video :as video]
-            [app.utils :refer [create-button get-query-params navigate]]
-            [app.firebase.room :as room]))
+            [app.utils :refer [create-button get-query-params navigate]]))
 
 (defonce state (atom {:subscriptions []}))
 (def status-section (.getElementById js/document "status-section"))
 (def video-player (.getElementById js/document "video-player"))
 
+(defn- set-hidden! [element value]
+  (set! (.-hidden element) value))
+
 (defn- handle-start-stream [stream]
-  (video/add-on-stream-ended! stream #(video/reset-video-player! video-player))
   (video/add-stream! video-player stream))
 
 (defn- add-stream-button! []
-  (let [handler        #(handle-start-stream %)
-        attributes     {:textContent "Share your screen"
+  (let [attributes     {:textContent "Share your screen"
                         :id          "capture-button"}
-        capture-button (create-button attributes  #(video/request-stream! handler))]
-    (video/mute! video-player)
+        on-click       #(video/request-stream! handle-start-stream)
+        capture-button (create-button attributes  on-click)]
     (.appendChild status-section capture-button)))
 
 (defn- handle-new-viewer [room-id viewer]
   (println "A viewer joined")
-  (remove-viewer room-id (.-id viewer)))
-
-(defn- filter-new-viewers [room-id snapshot]
-  (.forEach (.docChanges snapshot)
-            #(when (= (.-type %) "added")
-               (handle-new-viewer room-id (.-doc %)))))
+  (viewers/remove-viewer room-id viewer))
 
 (defn- setup-owner [room-id]
   (println "I am the owner")
-  (let [viewers (get-viewers room-id)
-        handler #(filter-new-viewers room-id %)]
+  (let [handler         #(handle-new-viewer room-id %)
+        wrapped-handler #(viewers/filter-new-viewers % handler)]
     (add-stream-button!)
-    (swap! state update :subscriptions conj (on-snapshot viewers handler))))
+    (video/mute! video-player)
+    (swap! state update :subscriptions conj (viewers/watch-viewers! room-id wrapped-handler))))
 
 (defn- setup-viewer [room-id]
   (println "I am a viewer")
-  (add-viewer room-id {:hello "world"}))
+  (viewers/add-viewer room-id @user {:hello "world"}))
 
 (defn- setup-room
-  "Attach event listeners. If the room owner, add the capture button."
-  [room]
-  (let [{:keys [owner room-id]} (room/get-room-data room)]
-    (.addEventListener video-player "ended" #(.remove (.-classList status-section) "hidden"))
-    (.addEventListener video-player "playing" #(.add (.-classList status-section) "hidden"))
+  "Attach event listeners to video player and setup owner or viewer."
+  [{:keys [owner room-id]}]
+  (video/add-on-playing! video-player #(set-hidden! status-section true))
+  (video/add-on-ended! video-player #(set-hidden! status-section false))
 
-    (if (= owner @user)
-      (setup-owner room-id)
-      (setup-viewer room-id))))
+  (if (= owner @user)
+    (setup-owner room-id)
+    (setup-viewer room-id)))
+
+(defn- setup-or-navigate [room]
+  (if-let [data (rooms/get-room-data room)]
+    (setup-room data)
+    (navigate "/")))
 
 (defn ^:dev/after-load init []
   (let [room-id (:roomId (get-query-params))]
     (if (nil? room-id)
       (navigate "/")
-      (-> (room/get-room room-id)
-          (.then setup-room)
+      (-> (rooms/get-room room-id)
+          (.then setup-or-navigate)
           (.catch #(navigate "/"))))))
 
 (defn ^:dev/before-load stop

@@ -4,16 +4,13 @@ A simple proof of concept of streaming videos to friends using WebRTC
 
 The live site is available at: https://azgoalie.github.io/movie-night
 
-
 ## Development
+
 The application is developed using:
-- Vite
-- React
-- Typescript
-- React-Router
+
+- ClojureScript
 - Firebase
-- Tailwind
+- PicoCSS
 
-To start development: `npm run dev`
-
+To start development: `npm run start`
 To start the firebase emulators: `npm run start:emulators`
