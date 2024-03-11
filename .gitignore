@@ -28,3 +28,4 @@ public/js
 .clj-kondo
 .lsp
 .shadow-cljs
+.calva

@@ -1,0 +1,21 @@
+;; shadow-cljs configuration
+{:source-paths ["src"]
+
+ :dependencies []
+
+ :dev-http     {3000 {:root    "public"
+                      :handler app.server/handler}}
+
+ :builds       {:app {:target           :browser
+                      :modules          {:shared    {:entries []}
+                                         :main      {:entries    [app.core]
+                                                     :init-fn    app.core/init
+                                                     :depends-on #{:shared}}
+                                         :streaming {:entries    [app.streaming.core]
+                                                     :init-fn    app.streaming.core/init
+                                                     :depends-on #{:shared}}}
+                      ; set this to solve the "failed to convert sources" issue in firestore 
+                      :compiler-options {:output-feature-set :es7}
+                      :devtools         {:preloads [app.firebase.preload]}
+                      :dev              {:closure-defines {app.utils/BASE_URL "/"}}
+                      :release          {:closure-defines {app.utils/BASE_URL "/movie-night"}}}}}
