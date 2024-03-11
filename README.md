@@ -13,4 +13,5 @@ The application is developed using:
 - PicoCSS
 
 To start development: `npm run start`
+
 To start the firebase emulators: `npm run start:emulators`
