@@ -48,5 +48,5 @@
   "Set the srcObj of the video element.
    When the stream ends, the video element will be reset."
   [video-player stream]
-  (add-on-stream-ended! stream (reset-video-player! video-player))
+  (add-on-stream-ended! stream #(reset-video-player! video-player))
   (set! (.-srcObject video-player) stream))

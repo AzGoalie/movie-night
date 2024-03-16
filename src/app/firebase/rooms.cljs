@@ -1,27 +1,30 @@
 (ns app.firebase.rooms
-  (:require [app.firebase.core :refer [firestore]]
-            ["firebase/firestore" :refer [addDoc collection deleteDoc doc getDoc getDocs onSnapshot setDoc]]))
+  (:require [app.firebase.core :refer [doc->map firestore]]
+            ["firebase/firestore" :refer [addDoc collection doc getDoc getDocs]]))
+
+(defn- room->map
+  [room]
+  (when-let [data (doc->map room)]
+    (assoc data :room-id (.-id room))))
 
 (defn get-rooms
-  "Returns a js/Promise of a firebase collection of rooms."
+  "Returns a js/Promise of a lazy-sequence of rooms."
   []
-  (getDocs (collection firestore "rooms")))
+  (-> (collection firestore "rooms")
+      (getDocs)
+      (.then #(map room->map (.-docs %)))))
 
 (defn get-room
-  "Returns js/Promise of a firebase document of a room specified at the given ID."
+  "Returns a js/Promise of a room specified at the given ID."
   [id]
-  (getDoc (doc firestore "rooms" id)))
+  (-> (doc firestore "rooms" id)
+      (getDoc)
+      (.then room->map)))
 
-(defn create-room
+(defn create-room!
   "Creates a new room with a random ID and owned by the specified user ID.
-   Returns a js/Promise of the newly created room."
+   Returns a js/Promise of the room id."
   [owner-id]
-  (addDoc (collection firestore "rooms") #js {:owner owner-id}))
-
-(defn get-room-data
-  "If the room exists, returns it's data as a map"
-  [room]
-  (when (.exists room)
-    (assoc
-     (js->clj (.data room) :keywordize-keys true)
-     :room-id (.-id room))))
+  (-> (collection firestore "rooms")
+      (addDoc #js {:owner owner-id})
+      (.then #(.-id %))))

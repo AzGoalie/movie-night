@@ -1,6 +1,6 @@
 (ns app.firebase.core
   (:require ["firebase/app" :refer [initializeApp]]
-            ["firebase/auth" :refer [getAuth onAuthStateChanged signInAnonymously]]
+            ["firebase/auth" :refer [getAuth signInAnonymously]]
             ["firebase/firestore" :refer [getFirestore]]))
 
 (def configuration
@@ -11,11 +11,31 @@
        :messagingSenderId "170551763745"
        :appId             "1:170551763745:web:a86648ec2bdfa5bff35460"})
 
-(def app (initializeApp configuration))
-(def auth (getAuth app))
-(def firestore (getFirestore app))
+(defonce app (initializeApp configuration))
+(defonce auth (getAuth app))
+(defonce firestore (getFirestore app))
 
-(def user (atom nil))
+(defonce user (atom nil))
 
-(onAuthStateChanged auth #(reset! user (.-uid %)))
-(signInAnonymously auth)
+(defn initialize-firebase
+  "Initialize firebase and call the handler after the user has signed in."
+  [callback]
+  (->
+   (signInAnonymously auth)
+   (.then #(reset! user (.. % -user -uid)))
+   (.then callback)))
+
+(defn doc->map
+  "Returns the data of a document as a map or nil if the document doesn't exist."
+  [doc]
+  (when (.exists doc)
+    (js->clj (.data doc) :keywordize-keys true)))
+
+(defn filter-snapshot
+  "Filter viewer snapshots based on the change type.
+   Acceptable values are 'added' 'modified' 'removed'.
+   Returns a lazy-list of firebase documents."
+  [snapshot type]
+  (->> (.docChanges snapshot)
+       (filter #(= (.-type %) type))
+       (map #(.-doc %))))

@@ -2,18 +2,35 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /rooms/{room} {
-      // Allow users to read and create rooms if they're signed in
-      allow read, create: if request.auth != null;
 
-      // Allow updating a room if you're the owner
-      allow update: if request.auth.uid == resource.data.owner
+    match /rooms/{room} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      
+      function isOwner(rsc) {
+        return rsc.data.owner == request.auth.uid;
+      }
+
+      function isViewer(viewer) {
+        return viewer == request.auth.uid;
+      }
+
+      // Allow users to read and create rooms if they're signed in
+      allow read, create: if isSignedIn();
+
+      // Allow the owner to update their room
+      allow update: if isOwner(resource);
 
       match /viewers/{viewer} {
         // Allow users to join a room if they're signed in
-        allow create: if request.auth != null;
-        // Allow the owner to read and remove viewers when handled
-        allow read, delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(room)).data.owner
+        allow create: if isSignedIn();
+
+        // Allow the owner and viewer to read, update and delete their own document
+        allow get, update, delete: if isOwner(get(/databases/$(database)/documents/rooms/$(room))) || isViewer(viewer);
+
+        // Allow the owner to list all viewers
+        allow list: if isOwner(get(/databases/$(database)/documents/rooms/$(room)));
       }
     }
   }

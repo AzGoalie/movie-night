@@ -21,8 +21,11 @@
 (defn get-query-params
   "Get current url search parameters as a map."
   []
-  (let [url-search-params (js/URLSearchParams. js/document.location.search)]
-    (js->clj (.fromEntries js/Object url-search-params) :keywordize-keys true)))
+  (->> (js/URLSearchParams. js/document.location.search)
+       (seq)
+       (js->clj)
+       (map (fn [[k v]] [(keyword k) (when-not (empty? v) v)]))
+       (into {})))
 
 (defn create-button
   "Create a button with the given attributes and attach the handler to on-click/"
