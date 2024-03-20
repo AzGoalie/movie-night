@@ -22,28 +22,29 @@
         capture-button (create-button attributes  on-click)]
     (.appendChild status-section capture-button)))
 
-(defn- handle-new-viewer [{:keys [viewer-id]}]
-  (println "A viewer joind with ID:" viewer-id))
+(defn- handle-new-viewer [{:keys [id] :as v}]
+  (println "A viewer joind with ID:" id)
+  (viewers/remove-viewer! v))
 
 (defn- setup-owner [room-id]
   (println "I am the owner")
   (add-stream-button!)
   (video/mute! video-player)
-  (swap! state update :subscriptions conj (viewers/watch-new-viewers! room-id handle-new-viewer)))
+  (swap! state update :subscriptions conj (viewers/watch-viewers! room-id "added" handle-new-viewer)))
 
 (defn- setup-viewer [room-id]
   (println "I am a viewer")
-  (viewers/add-viewer! room-id @user {}))
+  (viewers/update-viewer! {:id @user :room-id room-id}))
 
 (defn- setup-room
   "Attach event listeners to video player and setup owner or viewer."
-  [{:keys [owner room-id]}]
+  [{:keys [owner id]}]
   (video/add-on-playing! video-player #(set-hidden! status-section true))
   (video/add-on-ended! video-player #(set-hidden! status-section false))
 
   (if (= owner @user)
-    (setup-owner room-id)
-    (setup-viewer room-id)))
+    (setup-owner id)
+    (setup-viewer id)))
 
 (defn- setup-or-navigate [room]
   (if room
