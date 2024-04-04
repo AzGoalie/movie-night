@@ -31,6 +31,22 @@ service cloud.firestore {
 
         // Allow the owner to list all viewers
         allow list: if isOwner(get(/databases/$(database)/documents/rooms/$(room)));
+
+        match /caller-candidates/{candidate} {
+          // Allow owner to create and update caller candidates
+          allow write: if isOwner(get(/databases/$(database)/documents/rooms/$(room)))
+
+          // Allow viewer to read and delete caller candidates
+          allow read, delete: if isViewer(viewer)
+        }
+
+        match /callee-candidates/{candidate} {
+          // Allow the viewer to create and update callee candidates
+          allow write: if isViewer(viewer)
+
+          // Allow the owner to read and delete callee candidates
+          allow read, delete: if isOwner(get(/databases/$(database)/documents/rooms/$(room)))
+        }
       }
     }
   }

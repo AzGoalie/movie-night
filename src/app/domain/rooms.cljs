@@ -1,5 +1,5 @@
-(ns app.firebase.rooms
-  (:require [app.firebase.core :refer [create-document! get-document]]))
+(ns app.domain.rooms
+  (:require [app.firebase.firestore :refer [create-document! get-document]]))
 
 (defn get-room
   "Returns a js/Promise of a map containing the room data specified at the given ID."

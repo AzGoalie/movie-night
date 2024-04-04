@@ -38,15 +38,16 @@
     on-fullfilled
     on-rejected)))
 
-(defn add-on-stream-ended!
-  "Attach a handler when the js/MediaStream ends."
-  [stream handler]
-  (let [track (first (.getVideoTracks stream))]
-    (.addEventListener track "ended" handler)))
+(defn- handle-ended
+  "Reset the video-player when a track ends."
+  [video-player track]
+  (.addEventListener track "ended" #(reset-video-player! video-player)))
 
 (defn add-stream!
   "Set the srcObj of the video element.
    When the stream ends, the video element will be reset."
   [video-player stream]
-  (add-on-stream-ended! stream #(reset-video-player! video-player))
+  (when-let [tracks (.getTracks stream)]
+    (doseq [track tracks] (handle-ended video-player track)))
+  (.addEventListener stream "addtrack" #(handle-ended video-player (.-track %)))
   (set! (.-srcObject video-player) stream))

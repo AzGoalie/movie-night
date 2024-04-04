@@ -34,3 +34,14 @@
     (doseq [[k v] attributes]  (aset button (name k) v))
     (.addEventListener button "click" handler)
     button))
+
+(defn remove-element
+  "Remove an element by id from the page if it exists."
+  [id]
+  (when-let [element (.getElementById js/document id)]
+    (.remove element)))
+
+(defn set-hidden!
+  "Set the hidden attribute of the element."
+  [element is-hidden?]
+  (set! (.-hidden element) is-hidden?))

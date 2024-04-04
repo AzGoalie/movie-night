@@ -1,6 +1,6 @@
 (ns app.core
   (:require [app.firebase.core :refer [initialize-firebase user]]
-            [app.firebase.rooms :as rooms]
+            [app.domain.rooms :as rooms]
             [app.utils :refer [navigate]]))
 
 (def create-room-button (.getElementById js/document "create-room-button"))
