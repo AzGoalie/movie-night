@@ -21,10 +21,7 @@
   (swap! state update :connections conj connection))
 
 (defn- handle-ice-candidate [connection]
-  #(do
-     (println "ICE Candidate (clj):" %)
-     (js/console.log "ICE Candidate (js): " (clj->js %))
-     (.addIceCandidate connection (js/RTCIceCandidate. (clj->js %)))))
+  #(.addIceCandidate connection (js/RTCIceCandidate. (clj->js %))))
 
 (defn- handle-answer [connection]
   #(pc/set-remote-description connection % "answer"))
