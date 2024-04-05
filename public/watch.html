@@ -10,19 +10,27 @@
   </head>
 
   <body>
-    <main class="container">
-      <section id="status-section" class="center">
-        <h1>The broadcast has not started yet</h1>
+    <main class="container center">
+      <section id="loading" class="center">
+        <h1>
+          <span aria-busy="true">Joining the room...</span>
+        </h1>
       </section>
 
-      <div class="center">
-        <video
-          id="video-player"
-          class="video-player"
-          playsinline
-          autoplay
-          controls
-        ></video>
+      <div id="room-wrapper" hidden>
+        <section id="status-section" class="center">
+          <h1>The broadcast has not started yet</h1>
+        </section>
+
+        <div class="center">
+          <video
+            id="video-player"
+            class="video-player"
+            playsinline
+            autoplay
+            controls
+          ></video>
+        </div>
       </div>
     </main>
 
