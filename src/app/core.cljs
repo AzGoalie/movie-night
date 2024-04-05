@@ -3,8 +3,8 @@
             [app.domain.rooms :as rooms]
             [app.utils :refer [navigate]]))
 
-(def create-room-button (.getElementById js/document "create-room-button"))
-(def join-room-button (.getElementById js/document "join-room-button"))
+(def modal-id "join-room-modal")
+(def join-room-button-id "join-room-button")
 
 (defn- set-loading [element loading & {:keys [message]}]
   (.setAttribute element "aria-busy" loading)
@@ -14,20 +14,38 @@
   (-> (rooms/create-room! @user)
       (.then #(navigate "/watch" {:room-id %}))))
 
-(defn- handle-create-room! []
-  (set-loading create-room-button true :message "Creating room...")
-  (-> (initialize-firebase navigate-to-new-room)
-      (.catch #(set-loading create-room-button false))))
+(defn ^:export handle-create-room []
+  (let [create-room-button (.getElementById js/document "create-room-button")]
+    (set-loading create-room-button true :message "Creating room...")
+    (-> (initialize-firebase navigate-to-new-room)
+        (.catch #(set-loading create-room-button false)))))
 
-(defn- handle-join-room! []
-  (println "Joining room..."))
+(defn ^:export open-modal []
+  (let [modal (.getElementById js/document modal-id)]
+    (.showModal modal)))
+
+(defn ^:export close-modal []
+  (let [modal (.getElementById js/document modal-id)]
+    (.close modal)))
+
+(defn- handle-document-click [event]
+  (let [modal (.getElementById js/document modal-id)
+        modal-content (.querySelector modal "article")
+        modal-button (.getElementById js/document join-room-button-id)
+        target (.-target event)]
+    (when (and (.-open modal)
+               (not (.contains modal-content target))
+               (not= target modal-button))
+      (.close modal))))
+
+(defn- handle-escape [event]
+  (let [modal (.getElementById js/document modal-id)]
+    (when (and (= "Escape" (.-key event)) (.-open modal))
+      (.close modal))))
 
 (defn ^:dev/after-load init []
-  (.addEventListener create-room-button "click" handle-create-room!)
-  (.addEventListener join-room-button "click" handle-join-room!))
+  ;; Close modal when clicking outside
+  (.addEventListener js/document "click" handle-document-click)
 
-(defn ^:dev/before-load stop
-  "Used in development to reset state for hot-reloading"
-  []
-  (.removeEventListener create-room-button "click" handle-create-room!)
-  (.removeEventListener join-room-button "click" handle-join-room!))
+  ;; Close modal with escape
+  (.addEventListener js/document "keydown" handle-escape))
