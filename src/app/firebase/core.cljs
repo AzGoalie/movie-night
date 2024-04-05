@@ -18,9 +18,8 @@
 (defonce user (atom nil))
 
 (defn initialize-firebase
-  "Initialize firebase and call the handler after the user has signed in."
-  [callback]
+  "Initialize firebase and return a js/Promise after the user has signed in."
+  []
   (->
    (signInAnonymously auth)
-   (.then #(reset! user (.. % -user -uid)))
-   (.then callback)))
+   (.then #(reset! user (.. % -user -uid)))))

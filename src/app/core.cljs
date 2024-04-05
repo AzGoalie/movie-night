@@ -14,5 +14,6 @@
 (defn ^:export handle-create-room []
   (let [create-room-button (.getElementById js/document "create-room-button")]
     (set-loading create-room-button true :message "Creating room...")
-    (-> (initialize-firebase navigate-to-new-room)
+    (-> (initialize-firebase)
+        (.then navigate-to-new-room)
         (.catch #(set-loading create-room-button false)))))
