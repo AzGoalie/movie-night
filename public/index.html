@@ -29,7 +29,8 @@
           <button
             id="join-room-button"
             class="outline"
-            onclick="app.core.open_modal()"
+            data-target="join-room-modal"
+            onclick="app.modal.toggle_modal(event)"
           >
             Join a room
           </button>
@@ -37,19 +38,21 @@
       </section>
     </main>
 
-    <dialog id="join-room-modal" close>
+    <dialog id="join-room-modal">
       <article>
         <header>
           <button
             aria-label="Close"
             rel="prev"
-            onclick="app.core.close_modal()"
+            data-target="join-room-modal"
+            onclick="app.modal.toggle_modal(event)"
           ></button>
           <p>
             <strong>Join a Room!</strong>
           </p>
         </header>
-        <form>
+
+        <form action="watch">
           <fieldset>
             <label>
               Room ID
@@ -57,12 +60,7 @@
             </label>
           </fieldset>
 
-          <input
-            type="submit"
-            formaction="watch"
-            formmethod="get"
-            value="Join Room"
-          />
+          <input type="submit" value="Join Room" />
         </form>
       </article>
     </dialog>

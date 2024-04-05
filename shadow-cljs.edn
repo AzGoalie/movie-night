@@ -5,11 +5,10 @@
 
  :dev-http     {3000 {:root    "public"
                       :handler app.dev-server/handler}}
-
+ 
  :builds       {:app {:target           :browser
-                      :modules          {:shared    {:entries []}
+                      :modules          {:shared    {:entries    [app.modal]}
                                          :main      {:entries    [app.core]
-                                                     :init-fn    app.core/init
                                                      :depends-on #{:shared}}
                                          :streaming {:entries    [app.streaming.core]
                                                      :init-fn    app.streaming.core/init
