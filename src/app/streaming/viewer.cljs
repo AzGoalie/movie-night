@@ -17,11 +17,6 @@
   (doseq [unsubscribe (:subscriptions @state)] (unsubscribe))
   (swap! state assoc :subscriptions []))
 
-(defn- handle-add-track [stream]
-  (fn [event]
-    (doseq [track (.getTracks (first (.-streams event)))]
-      (.addTrack stream track))))
-
 (defn- handle-offer [connection callee]
   (fn [offer]
     (pc/set-remote-description connection offer "offer")
@@ -36,7 +31,7 @@
   (let [stream     (js/MediaStream.)
         viewer     (viewers/create-viewer! room-id @user)
         callee     (FirebaseCallee. (viewers/viewer-path viewer))
-        connection (pc/create-peer-connection callee (handle-add-track stream))]
+        connection (pc/create-peer-connection callee #(.addTrack stream (.-track %)))]
 
     (video/add-stream! video-player stream)
 
