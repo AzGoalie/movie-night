@@ -11,7 +11,6 @@ node_modules
 dist
 dist-ssr
 *.local
-public/js
 
 # Editor directories and files
 .vscode/*
@@ -23,6 +22,10 @@ public/js
 *.njsproj
 *.sln
 *.sw?
+
+# Copied / Generated HTML and JavaScript
+public/js
+public/*.html
 
 # Other stuff
 .clj-kondo

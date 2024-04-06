@@ -7,7 +7,11 @@
                       :handler app.dev-server/handler}}
  
  :builds       {:app {:target           :browser
-                      :modules          {:shared    {:entries    [app.modal]}
+                      :build-hooks
+                      [(shadow.html/copy-file "src/html/index.html" "public/index.html")
+                       (shadow.html/copy-file "src/html/watch.html" "public/watch.html")]
+                      :module-hash-names true
+                      :modules          {:shared    {:entries [app.modal]}
                                          :main      {:entries    [app.core]
                                                      :depends-on #{:shared}}
                                          :streaming {:entries    [app.streaming.core]
