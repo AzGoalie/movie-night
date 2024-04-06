@@ -20,7 +20,6 @@
 (defn- handle-add-track [stream]
   (fn [event]
     (doseq [track (.getTracks (first (.-streams event)))]
-      (js/console.log track)
       (.addTrack stream track))))
 
 (defn- handle-offer [connection callee]

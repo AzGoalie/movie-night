@@ -26,9 +26,8 @@
 (defn- handle-answer [connection]
   #(pc/set-remote-description connection % "answer"))
 
-(defn- handle-new-viewer [{:keys [id] :as v} stream]
-  (println "Attempting to connect to viewer with ID:" id)
-  (let [caller     (FirebaseCaller. (viewers/viewer-path v))
+(defn- handle-new-viewer [viewer stream]
+  (let [caller     (FirebaseCaller. (viewers/viewer-path viewer))
         connection (pc/create-peer-connection caller #(println "Callees shouldn't be adding tracks..."))]
     (doseq [track (.getTracks stream)] (.addTrack connection track stream))
     (-> (pc/create-offer connection)
@@ -49,8 +48,6 @@
     (create-button attributes #(video/request-stream! handler))))
 
 (defn init [room-id video-player status-section]
-  (println "I am the owner")
-
   (.appendChild status-section (create-capture-button room-id video-player))
   (video/mute! video-player)
   (video/add-on-ended! video-player remove-subscriptions!))
