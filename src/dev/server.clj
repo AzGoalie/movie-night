@@ -1,4 +1,4 @@
-(ns app.dev-server
+(ns dev.server
   (:require [shadow.http.push-state :as shadow]
             [clojure.string :refer [blank? ends-with? split]]))
 
