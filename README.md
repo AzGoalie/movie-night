@@ -8,6 +8,7 @@ The live site is available at: https://azgoalie.github.io/movie-night
 
 - [ClojureScript](https://clojurescript.org/)
 - [shadow-cljs](https://github.com/thheller/shadow-cljs)
+- [Hiccup](https://github.com/weavejester/hiccup)
 - [Firebase](https://firebase.google.com/)
 - [PicoCSS](https://picocss.com/)
 
