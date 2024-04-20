@@ -1,7 +1,10 @@
 (ns build.core
   (:require [clojure.java.io :as io]
             [hiccup2.core :as h]
+            [clj-reload.core :as reload]
             [shadow.html :refer [replace-script-names]]))
+
+(reload/init {:dirs ["src/app"]})
 
 (defn- hiccup->html
   [{:shadow.build/keys [config mode] :as build-state} hiccup target-file]
@@ -21,6 +24,7 @@
   {:shadow.build/stage :flush}
   [build-state hiccup-sym destination]
 
+  (reload/reload)
   (-> hiccup-sym namespace symbol (require :reload))
 
   (let [hiccup-var  (find-var hiccup-sym)

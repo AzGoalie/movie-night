@@ -1,4 +1,5 @@
-(ns app.html)
+(ns app.ui.html
+  (:require [app.ui.theme-switch :refer [theme-switch]]))
 
 (def head
   [:head
@@ -7,17 +8,19 @@
    [:link {:rel "apple-touch-icon" :sizes "180x180" :href "./apple-touch-icon.png"}]
    [:link {:rel "icon" :type "image/png" :sizes "32x32" :href "./favicon-32x32.png"}]
    [:link {:rel "icon" :type "image/png" :sizes "16x16" :href "./favicon-16x16.png"}]
+   [:link {:rel  "stylesheet" :href "https://cdn.jsdelivr.net/npm/theme-toggles@4.10.1/css/classic.min.css"}]
    [:link {:rel  "stylesheet" :href "./css/pico.min.css"}]
    [:link {:rel  "stylesheet" :href "./css/styles.css"}]
    [:title "Movie Night"]])
 
 (def index-page
-  [:html
+  [:html {:data-theme "dark"}
    head
    [:body
+    [:header [:div.container [:nav [:div] [:ul [:li theme-switch]]]]]
     [:main.container
      [:section.center
-      [:h1 "Welcome to Movie Night!"]
+      [:h1.center "Welcome to Movie Night!"]
       [:p "Throwing a virtual watch party? It's simple! Create a room to host
            your friends, or join the fun with a room ID you've received."]
 

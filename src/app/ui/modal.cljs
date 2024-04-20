@@ -1,4 +1,4 @@
-(ns app.modal)
+(ns app.ui.modal)
 
 (def is-open-class "modal-is-open")
 (def is-opening-class "modal-is-opening")

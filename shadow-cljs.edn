@@ -1,16 +1,17 @@
 ;; shadow-cljs configuration
 {:source-paths ["src"]
-
- :dependencies [[hiccup "2.0.0-RC3"]]
  
+ :dependencies [[hiccup "2.0.0-RC3"]
+                [io.github.tonsky/clj-reload "0.5.0"]]
+
  :dev-http     {3000 {:root    "public"
                       :handler dev.server/handler}}
 
  :builds       {:app {:target            :browser
-                      :build-hooks       [(build.core/render-hiccup app.html/index-page "public/index.html")
-                                          (build.core/render-hiccup app.html/watch-page "public/watch.html")]
+                      :build-hooks       [(build.core/render-hiccup app.ui.html/index-page "public/index.html")
+                                          (build.core/render-hiccup app.ui.html/watch-page "public/watch.html")]
                       :module-hash-names true
-                      :modules           {:shared    {:entries [app.modal]}
+                      :modules           {:shared    {:entries [app.ui.modal app.ui.theme-switch]}
                                           :main      {:entries    [app.core]
                                                       :depends-on #{:shared}}
                                           :streaming {:entries    [app.streaming.core]
