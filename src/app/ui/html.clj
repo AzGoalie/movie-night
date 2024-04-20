@@ -55,6 +55,7 @@
   [:html
    head
    [:body
+    [:header [:div.container [:nav [:div] [:ul [:li theme-switch]]]]]
     [:main.container.center
      [:section.center {:id "loading"}
       [:h1
