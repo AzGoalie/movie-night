@@ -29,7 +29,7 @@
         "Create a room"]
        [:button.outline {:id "join-room-button"
                          :data-target "join-room-modal"
-                         :onclick "app.modal.toggle_modal(event)"}
+                         :onclick "app.ui.modal.toggle_modal(event)"}
         "Join a room"]]]]
 
     [:script {:src "./js/shared.js"}]
@@ -41,7 +41,7 @@
       [:button {:aria-label "Close"
                 :rel "prev"
                 :data-target "join-room-modal"
-                :onclick "app.modal.toggle_modal(event)"}]
+                :onclick "app.ui.modal.toggle_modal(event)"}]
       [:p [:strong "Join a Room!"]]]
      [:form {:action "watch"}
       [:fieldset

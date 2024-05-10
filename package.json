@@ -8,6 +8,7 @@
     "start:emulators": "firebase emulators:start"
   },
   "devDependencies": {
+    "firebase-tools": "^13.8.2",
     "shadow-cljs": "^2.27.4"
   },
   "dependencies": {
