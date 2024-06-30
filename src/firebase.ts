@@ -2,6 +2,8 @@ import { initializeApp } from "firebase/app";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 
+import { emulators } from "../firebase.json";
+
 const firebaseConfig = {
   apiKey: "AIzaSyCKtJVUHHDRF8OYbE8onqJJI3nsAXvsP7A",
   authDomain: "movie-night-2928a.firebaseapp.com",
@@ -17,6 +19,6 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 if (import.meta.env.DEV) {
-  connectAuthEmulator(auth, "http://localhost:9099");
-  connectFirestoreEmulator(db, "localhost", 8080);
+  connectAuthEmulator(auth, `http://localhost:${emulators.auth.port}`);
+  connectFirestoreEmulator(db, "localhost", emulators.firestore.port);
 }

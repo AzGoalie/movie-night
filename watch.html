@@ -44,55 +44,35 @@
     </header>
 
     <main class="container">
-      <section>
-        <h1 class="text-center">Welcome to Movie Night!</h1>
-        <p class="center">
-          Throwing a virtual watch party? It's simple! Create a room to host
-          your friends, or jon the fun with a room ID you've received.
-        </p>
-        <div class="grid">
-          <button id="create-room-button">Create a room</button>
-          <button
-            id="join-room-button"
-            class="outline"
-            data-target="join-room-modal"
-          >
-            Join a room
-          </button>
-        </div>
+      <section id="loading">
+        <h1 class="text-center">
+          <span aria-busy="true"> Joining the room...</span>
+        </h1>
       </section>
+
+      <section id="invalid-room" hidden>
+        <article>
+          <header>
+            <p><strong>Invalid Room ID</strong></p>
+          </header>
+          <p>
+            The room that you tried to join does not exist. Please check the
+            room ID and try again.
+          </p>
+          <footer><a href="./">Return to home page</a></footer>
+        </article>
+      </section>
+
+      <div id="room-wrapper" hidden>
+        <section id="status-section" class="flex-col">
+          <h1 class="text-center">The broadcast hasn't started</h1>
+        </section>
+
+        <video id="video-player" playsinline autoplay controls></video>
+      </div>
     </main>
 
-    <dialog id="join-room-modal">
-      <article>
-        <header>
-          <button
-            aria-label="Close"
-            rel="prev"
-            data-target="join-room-modal"
-          ></button>
-          <p><strong>Join a Room!</strong></p>
-        </header>
-        <form action="watch">
-          <fieldset>
-            <label>
-              Room ID
-              <input
-                required
-                type="text"
-                name="room-id"
-                placeholder="Room ID"
-                autocomplete="off"
-              />
-            </label>
-          </fieldset>
-          <input type="submit" value="Join Room" />
-        </form>
-      </article>
-    </dialog>
-
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/watch/main.ts"></script>
     <script type="module" src="/src/utils/theme-toggle.ts"></script>
-    <script type="module" src="/src/utils/modal.ts"></script>
   </body>
 </html>

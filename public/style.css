@@ -1,0 +1,26 @@
+@import "/node_modules/@picocss/pico/css/pico.min.css";
+@import "/node_modules/theme-toggles/css/expand.css";
+
+.text-center {
+  text-align: center;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+video {
+  background-color: black;
+  width: 100%;
+}
+
+body > header,
+body > main {
+  padding-block: 0;
+}

@@ -3,25 +3,51 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    //match /{document=**} {
-    //  allow read, write: if request.time < timestamp.date(2024, 3, 16);
-    //}
-
     match /rooms/{room} {
-      // Allow users to read and create rooms if they're signed in
-      allow read, create: if request.auth != null;
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      
+      function isOwner(rsc) {
+        return rsc.data.owner == request.auth.uid;
+      }
 
-      // Allow updating a room if you're the owner
-      allow update: if request.auth.uid == resource.data.owner
+      function isViewer(viewer) {
+        return viewer == request.auth.uid;
+      }
+
+      // Allow users to read and create rooms if they're signed in
+      allow read, create: if isSignedIn();
+
+      // Allow the owner to update their room
+      allow update: if isOwner(resource);
+
+      match /viewers/{viewer} {
+        // Allow users to join a room if they're signed in
+        allow create: if isSignedIn();
+
+        // Allow the owner and viewer to read, update and delete their own document
+        allow get, update, delete: if isOwner(get(/databases/$(database)/documents/rooms/$(room))) || isViewer(viewer);
+
+        // Allow the owner to list all viewers
+        allow list: if isOwner(get(/databases/$(database)/documents/rooms/$(room)));
+
+        match /caller-candidates/{candidate} {
+          // Allow owner to create and update caller candidates
+          allow write: if isOwner(get(/databases/$(database)/documents/rooms/$(room)))
+
+          // Allow viewer to read and delete caller candidates
+          allow read, delete: if isViewer(viewer)
+        }
+
+        match /callee-candidates/{candidate} {
+          // Allow the viewer to create and update callee candidates
+          allow write: if isViewer(viewer)
+
+          // Allow the owner to read and delete callee candidates
+          allow read, delete: if isOwner(get(/databases/$(database)/documents/rooms/$(room)))
+        }
+      }
     }
   }
 }
