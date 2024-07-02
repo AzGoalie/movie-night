@@ -1,85 +1,106 @@
 import {
   collection,
-  type DocumentReference,
   onSnapshot,
-  QueryDocumentSnapshot,
-  updateDoc,
+  type DocumentReference,
 } from "firebase/firestore";
-import { iceConfig } from "./signaling";
+import { createFileInput, createLabel } from "../utils/forms";
+
+declare global {
+  interface HTMLVideoElement {
+    captureStream?(): MediaStream;
+    mozCaptureStream?(): MediaStream;
+  }
+}
 
 const video = document.getElementById("video-player") as HTMLVideoElement;
-const statusSection = document.getElementById("status-section");
+let currentFileName = "";
 
-const subscriptions: (() => void)[] = [];
-
-function cleanup() {
-  console.log("Stream ended");
-  video.srcObject = null;
-  subscriptions.forEach((unsubscribe) => unsubscribe());
-  subscriptions.length = 0;
-}
-
-function handleNewViewer(doc: QueryDocumentSnapshot, stream: MediaStream) {
-  // Create new peer connection
-  // Send Offer / Recieve Answer
-  // Send/Recieve ICE Candidates
-  // Add track
+function handleNewViewer(stream: MediaStream) {
   console.log("Viewer Joined");
-  console.log(doc.ref.path);
-
-  const pc = new RTCPeerConnection(iceConfig);
-  const candidates: RTCIceCandidateInit[] = [];
-
-  pc.onnegotiationneeded = async () => {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await updateDoc(doc.ref, { offer });
-  };
-  pc.onicecandidate = async (event) => {
-    if (event.candidate !== null) {
-      candidates.push(event.candidate.toJSON());
-    } else {
-      await updateDoc(doc.ref, { offerCanidates: candidates });
-    }
-  };
-
-  stream.getTracks().forEach((track) => pc.addTrack(track));
+  console.log(stream);
 }
 
-async function captureStream(roomRef: DocumentReference) {
-  const stream = await navigator.mediaDevices.getDisplayMedia();
+function applyFirefoxWorkaround(stream: MediaStream) {
+  const audio = new Audio();
+  audio.autoplay = true;
+  audio.srcObject = stream;
 
-  const viewersRef = collection(roomRef, "viewers");
-  const unsubViewers = onSnapshot(viewersRef, (snapshot) =>
-    snapshot
-      .docChanges()
-      .filter(({ type }) => type === "added")
-      .forEach(({ doc }) => {
-        handleNewViewer(doc, stream);
-      })
-  );
-  subscriptions.push(unsubViewers);
-
-  stream
-    .getTracks()
-    .forEach((track) => track.addEventListener("ended", cleanup));
-  video.srcObject = stream;
+  document.body.appendChild(audio);
 }
 
-function createCaptureButton() {
-  const button = document.createElement("button");
-  button.id = "capture-button";
-  button.textContent = "Share your screen";
-  button.classList.add("center");
+function onFileSelect(this: HTMLInputElement) {
+  if (this.files === null || this.files.length === 0) {
+    return;
+  }
 
-  return button;
+  const videoFile = this.files[0];
+  const videoURL = URL.createObjectURL(videoFile);
+  video.src = videoURL;
+  video.load();
+
+  currentFileName = videoFile.name;
+  const status = document.getElementById("status");
+  if (status) {
+    status.textContent = currentFileName;
+  }
+}
+
+function createMediaStream() {
+  const stream = video.captureStream?.() ?? video.mozCaptureStream?.();
+  if (!stream) {
+    throw new Error("Failed to create stream from video");
+  }
+
+  if (video.mozCaptureStream) {
+    applyFirefoxWorkaround(stream);
+  }
+
+  return stream;
+}
+
+function setupControls() {
+  const roomWrapper = document.getElementById("room-wrapper");
+
+  const controlSection = document.createElement("section");
+  controlSection.style.display = "flex";
+  controlSection.style.justifyContent = "space-between";
+  controlSection.style.marginTop = "1rem";
+  roomWrapper?.appendChild(controlSection);
+
+  const fileSelect = createFileInput("video/*", onFileSelect);
+  const fileSelectLabel = createLabel("Select Video File", fileSelect);
+  controlSection.appendChild(fileSelectLabel);
+
+  // TODO: Implement screen sharing
+  //
+  // const captureButton = createButton("Share Screen", true);
+  // const captureLable = createLabel(
+  //   "Alternatively share your screen",
+  //   captureButton
+  // );
+  // controlSection.appendChild(captureLable);
+}
+
+function featureCheck() {
+  if (!video.captureStream && !video.mozCaptureStream) {
+    alert("Your browser doesn't support streaming :(");
+    throw new Error("Unable to create stream");
+  }
 }
 
 function setupOwner(roomRef: DocumentReference) {
-  const button = createCaptureButton();
-  button.onclick = () => captureStream(roomRef);
+  featureCheck();
+  setupControls();
 
-  statusSection?.appendChild(button);
+  const stream = createMediaStream();
+
+  const viewers = collection(roomRef, "viewers");
+  onSnapshot(viewers, (snapshot) => {
+    snapshot
+      .docChanges()
+      .filter((change) => change.type === "added")
+      .forEach(() => handleNewViewer(stream));
+  });
 }
 
 export { setupOwner };
