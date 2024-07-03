@@ -19,7 +19,7 @@ async function handleCreateRoom() {
     const roomRef = doc(collection(db, "rooms"));
     await setDoc(roomRef, { owner: user.uid });
 
-    location.href = `/watch?room-id=${roomRef.id}`;
+    location.href = `./watch?room-id=${roomRef.id}`;
   } catch (e) {
     console.log(e);
     setLoading(createRoomButton, false);
