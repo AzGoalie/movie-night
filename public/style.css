@@ -1,0 +1,39 @@
+@import "/node_modules/@picocss/pico/css/pico.min.css";
+@import "/node_modules/theme-toggles/css/expand.css";
+
+.text-center {
+  text-align: center;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+#control-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+video {
+  display: block;
+  margin: 0 auto;
+  background-color: black;
+  width: 85%;
+}
+
+body > header,
+body > main {
+  padding-block: 0;
+}
+
+nav li {
+  padding-bottom: 0;
+}

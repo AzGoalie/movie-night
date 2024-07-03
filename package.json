@@ -1,17 +1,27 @@
 {
   "name": "movie-night",
-  "version": "0.0.1",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "shadow-cljs watch app",
-    "build": "shadow-cljs release app",
-    "start:emulators": "firebase emulators:start"
+    "start:emulators": "firebase emulators:start",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "firebase-tools": "^13.8.2",
-    "shadow-cljs": "^2.27.4"
+    "@eslint/js": "^9.6.0",
+    "@types/eslint__js": "^8.42.3",
+    "eslint": "^8.57.0",
+    "firebase-tools": "^13.12.0",
+    "typescript": "^5.5.2",
+    "typescript-eslint": "^7.14.1",
+    "vite": "^5.3.2"
   },
   "dependencies": {
-    "firebase": "^10.8.0"
+    "@picocss/pico": "^2.0.6",
+    "firebase": "^10.12.2",
+    "theme-toggles": "^4.10.1"
   }
 }
