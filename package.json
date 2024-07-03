@@ -6,7 +6,7 @@
   "scripts": {
     "start:emulators": "firebase emulators:start",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --base=/movie-night",
     "lint": "eslint .",
     "preview": "vite preview"
   },
