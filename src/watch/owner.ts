@@ -1,6 +1,8 @@
 import {
   collection,
+  deleteField,
   onSnapshot,
+  updateDoc,
   type DocumentReference,
 } from "firebase/firestore";
 import { createFileInput, createLabel } from "../utils/forms";
@@ -14,13 +16,12 @@ declare global {
 }
 
 const video = document.getElementById("video-player") as HTMLVideoElement;
-let currentFileName = "";
 
 const connections: RTCPeerConnection[] = [];
 
 function handleNewViewer(stream: MediaStream, viewer: DocumentReference) {
   console.log("Viewer Joined");
-  
+
   const signaler = createFirebaseCaller(viewer);
   const pc = createPeerConnecton(signaler);
   connections.push(pc);
@@ -36,21 +37,24 @@ function applyFirefoxWorkaround(stream: MediaStream) {
   document.body.appendChild(audio);
 }
 
-function onFileSelect(this: HTMLInputElement) {
-  if (this.files === null || this.files.length === 0) {
-    return;
-  }
+function onFileSelect(roomRef: DocumentReference) {
+  return function (this: HTMLInputElement) {
+    if (this.files === null || this.files.length === 0) {
+      return;
+    }
 
-  const videoFile = this.files[0];
-  const videoURL = URL.createObjectURL(videoFile);
-  video.src = videoURL;
-  video.load();
+    const videoFile = this.files[0];
+    const videoURL = URL.createObjectURL(videoFile);
+    video.src = videoURL;
+    video.load();
 
-  currentFileName = videoFile.name;
-  const status = document.getElementById("status");
-  if (status) {
-    status.textContent = currentFileName;
-  }
+    const status = document.getElementById("status");
+    if (status) {
+      status.textContent = videoFile.name;
+    }
+
+    void updateDoc(roomRef, { title: videoFile.name });
+  };
 }
 
 function createMediaStream() {
@@ -66,16 +70,14 @@ function createMediaStream() {
   return stream;
 }
 
-function setupControls() {
+function setupControls(roomRef: DocumentReference) {
   const roomWrapper = document.getElementById("room-wrapper");
 
   const controlSection = document.createElement("section");
-  controlSection.style.display = "flex";
-  controlSection.style.justifyContent = "space-between";
-  controlSection.style.marginTop = "1rem";
+  controlSection.id = "control-section";
   roomWrapper?.appendChild(controlSection);
 
-  const fileSelect = createFileInput("video/*", onFileSelect);
+  const fileSelect = createFileInput("video/*", onFileSelect(roomRef));
   const fileSelectLabel = createLabel("Select Video File", fileSelect);
   controlSection.appendChild(fileSelectLabel);
 
@@ -98,7 +100,9 @@ function featureCheck() {
 
 function setupOwner(roomRef: DocumentReference) {
   featureCheck();
-  setupControls();
+  setupControls(roomRef);
+
+  void updateDoc(roomRef, { title: deleteField() });
 
   const stream = createMediaStream();
   stream.onaddtrack = ({ track }) =>

@@ -2,6 +2,7 @@ import {
   type DocumentReference,
   updateDoc,
   onSnapshot,
+  deleteDoc,
 } from "firebase/firestore";
 
 export const iceConfig = {
@@ -145,6 +146,9 @@ function createFirebaseCaller(docRef: DocumentReference<Viewer>): Signaler {
       if (viewer?.answer) {
         handler(viewer.answer);
         unsubscribe();
+
+        // TODO: Figure out a better way to remove viewer info...
+        setTimeout(() => void deleteDoc(docRef), 1000);
       }
     });
   };

@@ -1,10 +1,18 @@
-import { type DocumentReference, doc, setDoc } from "firebase/firestore";
+import {
+  type DocumentReference,
+  doc,
+  setDoc,
+  onSnapshot,
+} from "firebase/firestore";
 import { createFirebaseCallee, createPeerConnecton } from "./signaling";
 
-const video = document.getElementById("video-player") as HTMLVideoElement;
-let pc: RTCPeerConnection;
+interface Room {
+  title?: string;
+}
 
-function setupViewer(roomRef: DocumentReference, uid: string) {
+const video = document.getElementById("video-player") as HTMLVideoElement;
+
+function setupViewer(roomRef: DocumentReference<Room>, uid: string) {
   const viewerRef = doc(roomRef, `viewers/${uid}`);
   void setDoc(viewerRef, {});
 
@@ -12,7 +20,15 @@ function setupViewer(roomRef: DocumentReference, uid: string) {
   video.srcObject = stream;
 
   const signaler = createFirebaseCallee(viewerRef);
-  pc = createPeerConnecton(signaler, ({ track }) => stream.addTrack(track));
+  createPeerConnecton(signaler, ({ track }) => stream.addTrack(track));
+
+  onSnapshot(roomRef, (snapshot) => {
+    const room = snapshot.data();
+    const status = document.getElementById("status");
+    if (status) {
+      status.textContent = room?.title ?? "The broadcast hasn't started";
+    }
+  });
 }
 
 export { setupViewer };
