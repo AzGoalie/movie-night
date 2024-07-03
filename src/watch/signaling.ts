@@ -16,10 +16,8 @@ export const iceConfig = {
 type TrackHandler = (event: RTCTrackEvent) => void;
 
 interface IceHandler {
-  sendCandidate(candidate: RTCIceCandidateInit | null): void;
-  watchCandidate(
-    handler: (candidate: RTCIceCandidateInit | null) => void
-  ): void;
+  sendCandidate(candidate: RTCIceCandidate): void;
+  watchCandidate(handler: (candidate: RTCIceCandidate) => void): void;
 }
 
 interface Caller {
@@ -43,29 +41,61 @@ interface Viewer {
   answer?: RTCSessionDescriptionInit;
 }
 
-function handleNegotiationNeeded(pc: RTCPeerConnection, signaler: Signaler) {
+function createPeerConnecton(signaler: Signaler, trackHandler?: TrackHandler) {
+  const pc = new RTCPeerConnection(iceConfig);
+
+  pc.onicecandidate = ({ candidate }) => {
+    if (candidate) {
+      signaler.sendCandidate(candidate);
+    }
+  };
+
+  if (trackHandler) {
+    pc.ontrack = trackHandler;
+  }
+
   switch (signaler.type) {
     case "callee":
-      return async () => {
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        signaler.sendAnswer(answer);
-      };
+      signaler.watchOffer((offer) => {
+        pc.setRemoteDescription(offer)
+          .then(() => pc.createAnswer())
+          .then((answer) => pc.setLocalDescription(answer))
+          .then(() => {
+            if (!pc.localDescription) {
+              throw new Error("Callee failed to create an answer");
+            }
+            const answer = {
+              type: pc.localDescription.type,
+              sdp: pc.localDescription.sdp,
+            };
+            signaler.sendAnswer(answer);
+          })
+          .catch((reason: unknown) => {
+            console.error("Failed to setup connection");
+            console.error(reason);
+          });
+
+        signaler.watchCandidate(
+          (candidate) => void pc.addIceCandidate(candidate)
+        );
+      });
+
+      break;
+
     case "caller":
-      return async () => {
+      pc.onnegotiationneeded = async () => {
+        console.log("caller: negotiation needed");
+        signaler.watchCandidate(
+          (candidate) => void pc.addIceCandidate(candidate)
+        );
+        signaler.watchAnswer((answer) => void pc.setRemoteDescription(answer));
+
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         signaler.sendOffer(offer);
       };
+      break;
   }
-}
-
-function createPeerConnecton(signaler: Signaler, trackHandler: TrackHandler) {
-  const pc = new RTCPeerConnection(iceConfig);
-
-  pc.onicecandidate = ({ candidate }) => signaler.sendCandidate(candidate);
-  pc.onnegotiationneeded = handleNegotiationNeeded(pc, signaler);
-  pc.ontrack = trackHandler;
 
   return pc;
 }
@@ -75,19 +105,16 @@ function createFirebaseIceHandler(
   field: "callerCandidates" | "calleeCandidates"
 ): IceHandler {
   const candidates: RTCIceCandidateInit[] = [];
-  const sendCandidate = (candidate: RTCIceCandidateInit | null) => {
-    if (candidate !== null) {
-      candidates.push(candidate);
-    } else {
+  const sendCandidate = (candidate: RTCIceCandidate) => {
+    candidates.push(candidate.toJSON());
+    if (candidate.candidate === "") {
       void updateDoc(docRef, { [field]: candidates }).then(() => {
         candidates.length = 0;
       });
     }
   };
 
-  const watchCandidate = (
-    handler: (candidate: RTCIceCandidateInit | null) => void
-  ) => {
+  const watchCandidate = (handler: (candidate: RTCIceCandidate) => void) => {
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
       const viewer = snapshot.data();
 
@@ -95,7 +122,9 @@ function createFirebaseIceHandler(
         field === "calleeCandidates" ? "callerCandidates" : "calleeCandidates";
       const remoteCandidates = viewer?.[remoteField];
       if (remoteCandidates) {
-        [...remoteCandidates, null].forEach(handler);
+        remoteCandidates.forEach((candidate) =>
+          handler(new RTCIceCandidate(candidate))
+        );
         unsubscribe();
       }
     });
@@ -132,8 +161,8 @@ function createFirebaseCallee(docRef: DocumentReference<Viewer>): Signaler {
   const watchOffer = (handler: (answer: RTCSessionDescriptionInit) => void) => {
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
       const viewer = snapshot.data();
-      if (viewer?.answer) {
-        handler(viewer.answer);
+      if (viewer?.offer) {
+        handler(viewer.offer);
         unsubscribe();
       }
     });
@@ -147,4 +176,9 @@ function createFirebaseCallee(docRef: DocumentReference<Viewer>): Signaler {
   };
 }
 
-export { createPeerConnecton, createFirebaseCaller, createFirebaseCallee };
+export {
+  createPeerConnecton,
+  createFirebaseCaller,
+  createFirebaseCallee,
+  type Viewer,
+};

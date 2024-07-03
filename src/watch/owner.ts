@@ -4,6 +4,7 @@ import {
   type DocumentReference,
 } from "firebase/firestore";
 import { createFileInput, createLabel } from "../utils/forms";
+import { createFirebaseCaller, createPeerConnecton } from "./signaling";
 
 declare global {
   interface HTMLVideoElement {
@@ -15,9 +16,16 @@ declare global {
 const video = document.getElementById("video-player") as HTMLVideoElement;
 let currentFileName = "";
 
-function handleNewViewer(stream: MediaStream) {
+const connections: RTCPeerConnection[] = [];
+
+function handleNewViewer(stream: MediaStream, viewer: DocumentReference) {
   console.log("Viewer Joined");
-  console.log(stream);
+  
+  const signaler = createFirebaseCaller(viewer);
+  const pc = createPeerConnecton(signaler);
+  connections.push(pc);
+
+  stream.getTracks().forEach((track) => pc.addTrack(track));
 }
 
 function applyFirefoxWorkaround(stream: MediaStream) {
@@ -93,13 +101,15 @@ function setupOwner(roomRef: DocumentReference) {
   setupControls();
 
   const stream = createMediaStream();
+  stream.onaddtrack = ({ track }) =>
+    connections.forEach((pc) => pc.addTrack(track));
 
   const viewers = collection(roomRef, "viewers");
   onSnapshot(viewers, (snapshot) => {
     snapshot
       .docChanges()
       .filter((change) => change.type === "added")
-      .forEach(() => handleNewViewer(stream));
+      .forEach(({ doc: { ref } }) => handleNewViewer(stream, ref));
   });
 }
 
