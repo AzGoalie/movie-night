@@ -114,6 +114,15 @@ function setupOwner(roomRef: DocumentReference) {
       .docChanges()
       .filter((change) => change.type === "added")
       .forEach(({ doc: { ref } }) => handleNewViewer(stream, ref));
+
+    snapshot
+      .docChanges()
+      .filter(
+        (change) =>
+          change.type === "modified" &&
+          Object.keys(change.doc.data()).length === 0
+      )
+      .forEach(({ doc: { ref } }) => handleNewViewer(stream, ref));
   });
 }
 

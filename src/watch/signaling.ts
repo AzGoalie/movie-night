@@ -61,6 +61,7 @@ function createPeerConnecton(signaler: Signaler, trackHandler?: TrackHandler) {
   switch (signaler.type) {
     case "callee":
       signaler.watchOffer((offer) => {
+        console.debug("Recieved offer");
         pc.setRemoteDescription(offer)
           .then(() => pc.createAnswer())
           .then((answer) => pc.setLocalDescription(answer))
@@ -79,9 +80,10 @@ function createPeerConnecton(signaler: Signaler, trackHandler?: TrackHandler) {
             console.error(reason);
           });
 
-        signaler.watchCandidate(
-          (candidate) => void pc.addIceCandidate(candidate)
-        );
+        signaler.watchCandidate((candidate) => {
+          console.debug("Recieved ICE candidate");
+          void pc.addIceCandidate(candidate);
+        });
       });
 
       break;
@@ -89,10 +91,14 @@ function createPeerConnecton(signaler: Signaler, trackHandler?: TrackHandler) {
     case "caller":
       pc.onnegotiationneeded = async () => {
         console.log("caller: negotiation needed");
-        signaler.watchCandidate(
-          (candidate) => void pc.addIceCandidate(candidate)
-        );
-        signaler.watchAnswer((answer) => void pc.setRemoteDescription(answer));
+        signaler.watchCandidate((candidate) => {
+          console.debug("Received ICE candidate");
+          void pc.addIceCandidate(candidate);
+        });
+        signaler.watchAnswer((answer) => {
+          console.debug("Received answer");
+          void pc.setRemoteDescription(answer);
+        });
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
