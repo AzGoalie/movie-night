@@ -2,7 +2,6 @@ import {
   type DocumentReference,
   updateDoc,
   onSnapshot,
-  deleteDoc,
 } from "firebase/firestore";
 
 export const iceConfig = {
@@ -17,8 +16,10 @@ export const iceConfig = {
 type TrackHandler = (event: RTCTrackEvent) => void;
 
 interface IceHandler {
-  sendCandidate(candidate: RTCIceCandidate): void;
-  watchCandidate(handler: (candidate: RTCIceCandidate) => void): void;
+  sendCandidate(candidate: RTCIceCandidate | undefined): void;
+  watchCandidate(
+    handler: (candidate: RTCIceCandidate | undefined) => void
+  ): void;
 }
 
 interface Caller {
@@ -48,6 +49,8 @@ function createPeerConnecton(signaler: Signaler, trackHandler?: TrackHandler) {
   pc.onicecandidate = ({ candidate }) => {
     if (candidate) {
       signaler.sendCandidate(candidate);
+    } else {
+      signaler.sendCandidate(undefined);
     }
   };
 
@@ -106,9 +109,10 @@ function createFirebaseIceHandler(
   field: "callerCandidates" | "calleeCandidates"
 ): IceHandler {
   const candidates: RTCIceCandidateInit[] = [];
-  const sendCandidate = (candidate: RTCIceCandidate) => {
-    candidates.push(candidate.toJSON());
-    if (candidate.candidate === "") {
+  const sendCandidate = (candidate: RTCIceCandidate | undefined) => {
+    if (candidate) {
+      candidates.push(candidate.toJSON());
+    } else {
       void updateDoc(docRef, { [field]: candidates }).then(() => {
         candidates.length = 0;
       });
@@ -146,9 +150,6 @@ function createFirebaseCaller(docRef: DocumentReference<Viewer>): Signaler {
       if (viewer?.answer) {
         handler(viewer.answer);
         unsubscribe();
-
-        // TODO: Figure out a better way to remove viewer info...
-        setTimeout(() => void deleteDoc(docRef), 1000);
       }
     });
   };
