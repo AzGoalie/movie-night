@@ -20,7 +20,9 @@ function setupViewer(roomRef: DocumentReference<Room>, uid: string) {
   video.srcObject = stream;
 
   const signaler = createFirebaseCallee(viewerRef);
-  createPeerConnecton(signaler, ({ track }) => stream.addTrack(track));
+  const pc = createPeerConnecton(signaler, ({ track }) =>
+    stream.addTrack(track)
+  );
 
   onSnapshot(roomRef, (snapshot) => {
     const room = snapshot.data();
@@ -29,6 +31,19 @@ function setupViewer(roomRef: DocumentReference<Room>, uid: string) {
       status.textContent = room?.title ?? "The broadcast hasn't started";
     }
   });
+
+  pc.onconnectionstatechange = () => {
+    if (
+      pc.connectionState === "closed" ||
+      pc.connectionState === "disconnected"
+    ) {
+      console.debug("Host left");
+      const status = document.getElementById("status");
+      if (status) {
+        status.textContent = "The broadcast hasn't started";
+      }
+    }
+  };
 }
 
 export { setupViewer };

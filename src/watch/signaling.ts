@@ -90,7 +90,7 @@ function createPeerConnecton(signaler: Signaler, trackHandler?: TrackHandler) {
 
     case "caller":
       pc.onnegotiationneeded = async () => {
-        console.log("caller: negotiation needed");
+        console.debug("caller: negotiation needed");
         signaler.watchCandidate((candidate) => {
           console.debug("Received ICE candidate");
           void pc.addIceCandidate(candidate);

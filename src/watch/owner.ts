@@ -1,7 +1,9 @@
 import {
   collection,
+  deleteDoc,
   deleteField,
   onSnapshot,
+  setDoc,
   updateDoc,
   type DocumentReference,
 } from "firebase/firestore";
@@ -20,11 +22,25 @@ const video = document.getElementById("video-player") as HTMLVideoElement;
 const connections: RTCPeerConnection[] = [];
 
 function handleNewViewer(stream: MediaStream, viewer: DocumentReference) {
-  console.log("Viewer Joined");
+  console.debug("Viewer Joined");
 
   const signaler = createFirebaseCaller(viewer);
   const pc = createPeerConnecton(signaler);
   connections.push(pc);
+
+  pc.onconnectionstatechange = () => {
+    if (
+      pc.connectionState === "closed" ||
+      pc.connectionState === "disconnected"
+    ) {
+      console.debug("Viewer left");
+      void deleteDoc(viewer);
+      const index = connections.findIndex((value) => value === pc);
+      if (index >= 0) {
+        connections.splice(index, 1);
+      }
+    }
+  };
 
   stream.getTracks().forEach((track) => pc.addTrack(track));
 }
@@ -113,16 +129,15 @@ function setupOwner(roomRef: DocumentReference) {
     snapshot
       .docChanges()
       .filter((change) => change.type === "added")
-      .forEach(({ doc: { ref } }) => handleNewViewer(stream, ref));
-
-    snapshot
-      .docChanges()
-      .filter(
-        (change) =>
-          change.type === "modified" &&
-          Object.keys(change.doc.data()).length === 0
-      )
-      .forEach(({ doc: { ref } }) => handleNewViewer(stream, ref));
+      .forEach(({ doc }) => {
+        void (async () => {
+          const viewer = doc.data();
+          if (Object.keys(viewer).length !== 0) {
+            await setDoc(doc.ref, {});
+          }
+          handleNewViewer(stream, doc.ref);
+        })();
+      });
   });
 }
 
