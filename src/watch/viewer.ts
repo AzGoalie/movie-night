@@ -33,10 +33,7 @@ function setupViewer(roomRef: DocumentReference<Room>, uid: string) {
   });
 
   pc.onconnectionstatechange = () => {
-    if (
-      pc.connectionState === "closed" ||
-      pc.connectionState === "disconnected"
-    ) {
+    if (pc.connectionState === "closed" || pc.connectionState === "failed") {
       console.debug("Host left");
       const status = document.getElementById("status");
       if (status) {
