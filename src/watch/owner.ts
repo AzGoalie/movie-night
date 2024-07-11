@@ -29,10 +29,7 @@ function handleNewViewer(stream: MediaStream, viewer: DocumentReference) {
   connections.push(pc);
 
   pc.onconnectionstatechange = () => {
-    if (
-      pc.connectionState === "closed" ||
-      pc.connectionState === "disconnected"
-    ) {
+    if (pc.connectionState === "closed" || pc.connectionState === "failed") {
       console.debug("Viewer left");
       void deleteDoc(viewer);
       const index = connections.findIndex((value) => value === pc);
